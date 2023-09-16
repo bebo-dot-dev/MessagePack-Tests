@@ -7,17 +7,17 @@ namespace TestApi.Controllers;
 [Route("[controller]/[action]")]
 public class TestController : ControllerBase
 {
-    private readonly AesEncryption _aesEncryption;
+    private readonly EncryptionProvider _encryptionProvider;
 
-    public TestController(AesEncryption aesEncryption)
+    public TestController(EncryptionProvider encryptionProvider)
     {
-        _aesEncryption = aesEncryption;
+        _encryptionProvider = encryptionProvider;
     }
 
     [HttpGet]
     public Task<IActionResult> GenerateEncryptionKey()
     {
-        var (key, iv, keySize) = AesEncryption.GenerateKey();
+        var (key, iv, keySize) = EncryptionProvider.GenerateKey();
         var response = new
         {
             Key = Convert.ToHexString(key).ToLowerInvariant(),
@@ -30,21 +30,21 @@ public class TestController : ControllerBase
     [HttpPost]
     public Task<IActionResult> EncryptValue([FromBody] EncryptionModel request)
     {
-        var cipherText = _aesEncryption.Encrypt(request.Value);
+        var cipherText = _encryptionProvider.Encrypt(request.Value);
         return Task.FromResult<IActionResult>(Ok(cipherText));
     }
     
     [HttpPost]
     public Task<IActionResult> DecryptValue([FromBody] EncryptionModel request)
     {
-        var clearText = _aesEncryption.Decrypt(request.Value);
+        var clearText = _encryptionProvider.Decrypt(request.Value);
         return Task.FromResult<IActionResult>(Ok(clearText));
     }
 
     [HttpPost]
     public Task<IActionResult> CreateMessagePack([FromBody] EncryptionModel request)
     {
-        var cipherText = _aesEncryption.Encrypt(request.Value);
+        var cipherText = _encryptionProvider.Encrypt(request.Value);
         var newMsgPack = new MessagePackObj
         {
             EncryptedPassword = cipherText
@@ -59,7 +59,7 @@ public class TestController : ControllerBase
     {
         var messagePackBytes = System.IO.File.ReadAllBytes("Resources/default.msgpack");
         var msgPack = MessagePackSerializer.Deserialize<MessagePackObj>(messagePackBytes);
-        var decipheredPassword = msgPack.GetPassword(_aesEncryption);
+        var decipheredPassword = msgPack.GetPassword(_encryptionProvider);
         var response = new
         {
             cipherPassword = msgPack.EncryptedPassword,

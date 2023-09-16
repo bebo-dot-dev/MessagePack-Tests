@@ -13,7 +13,7 @@ builder.Services.AddOptions<EncryptionOptions>()
     .Bind(builder.Configuration.GetSection(EncryptionOptions.Section))
     .ValidateOnStart();
 
-builder.Services.AddSingleton<AesEncryption>();
+builder.Services.AddSingleton<EncryptionProvider>();
 
 var app = builder.Build();
 

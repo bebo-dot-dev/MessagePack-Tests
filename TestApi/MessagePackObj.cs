@@ -13,10 +13,10 @@ public sealed record MessagePackObj
     [DataMember(Order = 1)] 
     public string EncryptedPassword { get; init; } = null!;
 
-    public string GetPassword(AesEncryption aesEncryption)
+    public string GetPassword(EncryptionProvider encryptionProvider)
     {
-        if (!string.IsNullOrEmpty(_decryptedPassword)) return _decryptedPassword;
-        _decryptedPassword = aesEncryption.Decrypt(EncryptedPassword);
+        if (_decryptedPassword is not null) return _decryptedPassword;
+        _decryptedPassword = encryptionProvider.Decrypt(EncryptedPassword);
         return _decryptedPassword;
     }
 }

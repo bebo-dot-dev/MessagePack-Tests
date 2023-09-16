@@ -3,11 +3,11 @@ using Microsoft.Extensions.Options;
 
 namespace TestApi;
 
-public class AesEncryption
+public class EncryptionProvider
 {
     private readonly EncryptionOptions _options;
     
-    public AesEncryption(IOptions<EncryptionOptions> options)
+    public EncryptionProvider(IOptions<EncryptionOptions> options)
     {
         _options = options.Value;
     }
