@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace TestApi;
+namespace TestApi.MessagePack;
 
 [DataContract]
 public sealed record MessagePackObj
@@ -12,6 +12,9 @@ public sealed record MessagePackObj
 
     [DataMember(Order = 1)] 
     public string EncryptedPassword { get; init; } = null!;
+    
+    [IgnoreDataMember]
+    public string Password { get; init; } = null!;
 
     public string GetPassword(EncryptionProvider provider)
     {

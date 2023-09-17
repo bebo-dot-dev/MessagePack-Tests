@@ -1,5 +1,6 @@
 using MessagePack;
 using Microsoft.AspNetCore.Mvc;
+using TestApi.MessagePack;
 
 namespace TestApi.Controllers;
 
@@ -58,12 +59,38 @@ public class TestController : ControllerBase
     public Task<IActionResult> GetMessagePack()
     {
         var messagePackBytes = System.IO.File.ReadAllBytes("Resources/default.msgpack");
-        var msgPack = MessagePackSerializer.Deserialize<MessagePackObj>(messagePackBytes);
+        var msgPack = MessagePackSerializer.Deserialize<MessagePackObj>(messagePackBytes, MessagePackSerializerOptions.Standard);
         var decipheredPassword = msgPack.GetPassword(_encryptionProvider);
         var response = new
         {
             cipherPassword = msgPack.EncryptedPassword,
             password = decipheredPassword
+        };
+        return Task.FromResult<IActionResult>(Ok(response));
+    }
+    
+    [HttpPost]
+    public Task<IActionResult> CreateMessagePackCustom([FromBody] EncryptionModel request)
+    {
+        var cipherText = _encryptionProvider.Encrypt(request.Value);
+        var newMsgPack = new MessagePackObj
+        {
+            EncryptedPassword = cipherText
+        };
+        var messagePackBytes = MessagePackSerializer.Serialize(newMsgPack, CustomMessagePackSerializerOptions.Custom(_encryptionProvider));
+        System.IO.File.WriteAllBytes("Resources/custom.msgpack", messagePackBytes);
+        return Task.FromResult<IActionResult>(Ok(cipherText));
+    }
+    
+    [HttpGet]
+    public Task<IActionResult> GetMessagePackCustom()
+    {
+        var messagePackBytes = System.IO.File.ReadAllBytes("Resources/custom.msgpack");
+        var msgPack = MessagePackSerializer.Deserialize<MessagePackObj>(messagePackBytes, CustomMessagePackSerializerOptions.Custom(_encryptionProvider));
+        var response = new
+        {
+            cipherPassword = msgPack.EncryptedPassword,
+            password = msgPack.Password
         };
         return Task.FromResult<IActionResult>(Ok(response));
     }
