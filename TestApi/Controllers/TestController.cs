@@ -48,6 +48,7 @@ public class TestController : ControllerBase
         var cipherText = _encryptionProvider.Encrypt(request.Value);
         var newMsgPack = new MessagePackObj
         {
+            Id = 1,
             EncryptedPassword = cipherText
         };
         var messagePackBytes = MessagePackSerializer.Serialize(newMsgPack, MessagePackSerializerOptions.Standard);
@@ -73,11 +74,29 @@ public class TestController : ControllerBase
     public Task<IActionResult> CreateMessagePackCustom([FromBody] EncryptionModel request)
     {
         var cipherText = _encryptionProvider.Encrypt(request.Value);
-        var newMsgPack = new MessagePackObj
+        
+        var dictionary = new Dictionary<int, MessagePackObj>
         {
-            EncryptedPassword = cipherText
+            { 
+                1, new MessagePackObj
+                {
+                    Id = 1,
+                    EncryptedPassword = cipherText
+                } 
+            },
+            { 
+                2, new MessagePackObj
+                {
+                    Id = 2,
+                    EncryptedPassword = cipherText
+                } 
+            }
         };
-        var messagePackBytes = MessagePackSerializer.Serialize(newMsgPack, CustomMessagePackSerializerOptions.Custom(_encryptionProvider));
+        
+        var messagePackBytes = MessagePackSerializer.Serialize(
+            dictionary,
+            SerializerOptions.EncryptionEnabled(_encryptionProvider));
+        
         System.IO.File.WriteAllBytes("Resources/custom.msgpack", messagePackBytes);
         return Task.FromResult<IActionResult>(Ok(cipherText));
     }
@@ -86,12 +105,7 @@ public class TestController : ControllerBase
     public Task<IActionResult> GetMessagePackCustom()
     {
         var messagePackBytes = System.IO.File.ReadAllBytes("Resources/custom.msgpack");
-        var msgPack = MessagePackSerializer.Deserialize<MessagePackObj>(messagePackBytes, CustomMessagePackSerializerOptions.Custom(_encryptionProvider));
-        var response = new
-        {
-            cipherPassword = msgPack.EncryptedPassword,
-            password = msgPack.Password
-        };
-        return Task.FromResult<IActionResult>(Ok(response));
+        var dictionary = MessagePackSerializer.Deserialize<Dictionary<int, MessagePackObj>>(messagePackBytes, SerializerOptions.EncryptionEnabled(_encryptionProvider));
+        return Task.FromResult<IActionResult>(Ok(dictionary));
     }
 }

@@ -9,12 +9,15 @@ public sealed record MessagePackObj
     
     [DataMember(Order = 0)] 
     public int Version { get; init; } = 1;
-
+    
     [DataMember(Order = 1)] 
+    public int Id { get; init; }
+
+    [DataMember(Order = 2)] 
     public string EncryptedPassword { get; init; } = null!;
     
     [IgnoreDataMember]
-    public string Password { get; init; } = null!;
+    public string Password { get; set; } = null!;
 
     public string GetPassword(EncryptionProvider provider)
     {
