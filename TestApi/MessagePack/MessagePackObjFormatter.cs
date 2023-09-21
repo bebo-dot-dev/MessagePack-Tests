@@ -1,9 +1,10 @@
+using System.Text;
 using MessagePack;
 using MessagePack.Formatters;
 
 namespace TestApi.MessagePack;
 
-public class MessagePackObjFormatter : IMessagePackFormatter<Dictionary<int, MessagePackObj>>
+public class MessagePackObjFormatter : IMessagePackFormatter<MessagePackObj>
 {
     public static readonly MessagePackObjFormatter Instance;
 
@@ -13,28 +14,49 @@ public class MessagePackObjFormatter : IMessagePackFormatter<Dictionary<int, Mes
     }
     
     public void Serialize(
-        ref MessagePackWriter writer, 
-        Dictionary<int, MessagePackObj> dictionary, 
+        ref MessagePackWriter writer,
+        MessagePackObj messagePackObj,
         MessagePackSerializerOptions options)
     {
-        foreach (var raw in dictionary.Values.Select(value => MessagePackSerializer.Serialize(value)))
-        {
-            writer.WriteRaw(raw);
-        }
+        writer.WriteArrayHeader(3);
+        writer.WriteInt32(messagePackObj.Version);
+        writer.WriteInt32(messagePackObj.Id);
+        writer.WriteString(Encoding.UTF8.GetBytes(messagePackObj.EncryptedPassword));
     }
 
-    public Dictionary<int, MessagePackObj> Deserialize(
-        ref MessagePackReader reader, 
+    public MessagePackObj Deserialize(
+        ref MessagePackReader reader,
         MessagePackSerializerOptions options)
     {
-        var dict = new Dictionary<int, MessagePackObj>();
-        while (!reader.End)
-        {
-            var raw = reader.ReadRaw();
-            var obj = MessagePackSerializer.Deserialize<MessagePackObj>(raw);
-            dict.Add(obj.Id, obj);
-        }
+        var version = 0;
+        var id = 0;
+        var encryptedPassword = "";
         
-        return dict;
+        int count = reader.ReadArrayHeader();
+        for (int i = 0; i < count; i++)
+        {
+            switch (i)
+            {
+                case 0:
+                    version = reader.ReadInt32();
+                    break;
+                case 1:
+                    id = reader.ReadInt32();
+                    break;
+                case 2:
+                    encryptedPassword = reader.ReadString()!;
+                    break;
+                default:
+                    reader.Skip();
+                    break;
+            }
+        }
+
+        return new MessagePackObj
+        {
+            Version = version,
+            Id = id,
+            EncryptedPassword = encryptedPassword
+        };
     }
 }

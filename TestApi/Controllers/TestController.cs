@@ -95,7 +95,7 @@ public class TestController : ControllerBase
         
         var messagePackBytes = MessagePackSerializer.Serialize(
             dictionary,
-            SerializerOptions.EncryptionEnabled(_encryptionProvider));
+            SerializerOptions.MessagePackObjDictionaryWithEncryption(_encryptionProvider));
         
         System.IO.File.WriteAllBytes("Resources/custom.msgpack", messagePackBytes);
         return Task.FromResult<IActionResult>(Ok(cipherText));
@@ -105,7 +105,7 @@ public class TestController : ControllerBase
     public Task<IActionResult> GetMessagePackCustom()
     {
         var messagePackBytes = System.IO.File.ReadAllBytes("Resources/custom.msgpack");
-        var dictionary = MessagePackSerializer.Deserialize<Dictionary<int, MessagePackObj>>(messagePackBytes, SerializerOptions.EncryptionEnabled(_encryptionProvider));
+        var dictionary = MessagePackSerializer.Deserialize<Dictionary<int, MessagePackObj>>(messagePackBytes, SerializerOptions.MessagePackObjDictionaryWithEncryption(_encryptionProvider));
         return Task.FromResult<IActionResult>(Ok(dictionary));
     }
 }

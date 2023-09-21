@@ -8,9 +8,9 @@ namespace MessagePack.Tests;
 public class MessagePackTests
 {
     [Test]
-    public void GivenTwoDictionaryItems_WhenSerializeAndDeserialize_AssertMessagePackSerializationException()
+    public void GivenTwoDictionaryItems_WhenSerializeAndDeserialize_AssertCanSerializeAndDeserialize()
     {
-        var dictionary = new Dictionary<int, MessagePackObj>
+        var input = new Dictionary<int, MessagePackObj>
         {
             { 
                 1, new MessagePackObj
@@ -29,13 +29,13 @@ public class MessagePackTests
         };
         
         var messagePackBytes = MessagePackSerializer.Serialize(
-            dictionary,
-            SerializerOptions.Standard);
+            input,
+            SerializerOptions.MessagePackObjDictionary);
 
-        var ex = Assert.Throws<MessagePackSerializationException>(() => 
-            MessagePackSerializer.Deserialize<Dictionary<int, MessagePackObj>>(
-                messagePackBytes, SerializerOptions.Standard))!;
-        
-        ex.InnerException?.Message.Should().Contain("An item with the same key has already been added");
+        var act = MessagePackSerializer.Deserialize<Dictionary<int, MessagePackObj>>(
+            messagePackBytes,
+            SerializerOptions.MessagePackObjDictionary);
+
+        act.Should().BeEquivalentTo(input);
     }
 }
